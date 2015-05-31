@@ -1,4 +1,4 @@
-# 9292
+# 9292 Pebble app
 This repository holds the fundamental basics for a 9292 watch app for the Pebble.
 
 ## What is does
@@ -9,7 +9,7 @@ It looks at the location of the user and the hour and day of the week to determi
 Feel free to fork / create pull req.
 
 ### Current status
-The app displays the JSON message as output on the screen.
+The app currently only displays the first step the user needs to take (e.g. walk to bus stop).
 I did not made the effort to create a nice GUI, maybe later, but feel free to create it.
 The basics are here, you only need to make a nice layout and icons (for ferry, bus, train, walk etc.).
 
