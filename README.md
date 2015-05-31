@@ -1,1 +1,15 @@
 # 9292
+This repository holds the fundamental basics for a 9292 watch app for the Pebble.
+
+## What is does
+It looks at the location of the user and the hour and day of the week to determine where to go.
+(e.g. when in the morning on a workday, it knows you want to go to work)
+
+## What to do
+Please for this, create pull req, etc.
+The current status is that is displays the JSON message as output on the screen.
+I did not made the effort to create a nice GUI, maybe later, but feel free to create it.
+The basics are here, you only need to make a nice layout and icons (for ferry, bus, train, walk etc.).
+
+## Contact
+Feel free to contact me (in dutch) if you have questions and or suggestions.
