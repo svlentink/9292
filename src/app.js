@@ -366,11 +366,8 @@ function updateScreen(location){
 }
 
 showLoadingScreen();
-//Pebble.addEventListener('ready', function(e) {
-//	log.debug("App ready",e);
-	updateLocation(); //triggers the update screen
-	setInterval ( //not working, don't know why
-		updateLocation,
-		userPreferences.updateScreenIntervalInSec * 1000
-	); //http://stackoverflow.com/questions/26433309/pebble-js-update-view-frequently
-//});
+updateLocation(); //triggers the update screen
+setInterval (
+	updateLocation,
+	userPreferences.updateScreenIntervalInSec * 1000
+); //http://stackoverflow.com/questions/26433309/pebble-js-update-view-frequently
