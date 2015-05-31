@@ -51,22 +51,43 @@ var UI = require('ui'),
 	};
 
 
+
+
+// http://developer.getpebble.com/guides/js-apps/pebble-js/js-ui/#freeform-ui-example
+var statusBar = new UI.TimeText({
+	position: new Vector2(0, 0),
+	size: new Vector2(144, statusBarHeight),
+	text: "%H:%M",
+	font: 'GOTHIC_14_BOLD', // http://developer.getpebble.com/guides/pebble-apps/display-and-animations/ux-fonts/
+	color: 'white',
+	backgroundColor: 'black',
+	textAlign: 'center'
+});
+
+
 /**
 * Please update this method, make it all look pretty
 */
 function showJourneyDataOnScreen(receivedData){
-	if(receivedData.journeys && receivedData.journeys.length)
-		receivedData = receivedData.journeys[0];
-
 	log.debug('Entering showJourneyDataOnScreen',receivedData);
+	loading.window.hide();//hide initial logo screen
+	var output;
+	if(receivedData.journeys && receivedData.journeys.length){
+		var journey = receivedData.journeys[0], //get first
+			jstep = journey.legs[0], //first part of this journey (e.g. walk to bus stop)
+			type = jstep.mode.type[0].toUpperCase(), // e.g. S=subway, W=walk
+			from = jstep.stops[0].location.name,
+			to = jstep.stops[jstep.stops.length-1].location.name, //last stop, skip all stops in between
+			timeNextStep = journey.legs[1].stops[0].arrival.substr(11);
+		output = type + ': ' + from + ' -> ' + to + ' (' + timeNextStep + ')';
+	}
+	else
+		output = JSON.stringify(receivedData).substr(0,100);
 
-	loading.window.hide();//hide init screen
-
-	var displaying = JSON.stringify(receivedData).substr(0,100),
-		window = new UI.Window(),
+	var window = new UI.Window(),
 		item = new UI.Text({
-				text:displaying,
-				position: new Vector2(0, 0),
+				text:output,
+				position: new Vector2(0, statusBarHeight),
 				color:'white',
 				backgroundColor:'black',
 				size: new Vector2(144, (168-statusBarHeight)),
@@ -74,6 +95,7 @@ function showJourneyDataOnScreen(receivedData){
 				textOverflow: 'wrap',
 				textAlign: 'right'
 			});
+	window.add(statusBar);
 	window.add(item);
 	window.show();
 }
@@ -138,7 +160,7 @@ function genTextLog(level, desc, obj){
 		desc + ' {';
 
 	for(var key in obj)
-		output += '\n\t' + key + ' :\t' + (typeof obj[key] === 'object')?JSON.stringify(obj[key]):obj[key];
+		output += '\n\t' + key + ' :\t' + obj[key]; //(typeof obj[key] === 'object')?JSON.stringify(obj[key]):obj[key];
 
 	return output += ' }';
 }
@@ -213,9 +235,6 @@ function showLoadingScreen(){
 		loading.window.add(loading.items[li]);
 	loading.window.show();
 }
-
-
-
 
 /**
 * The next part sets the location to the location variable.
@@ -298,13 +317,15 @@ function getLocTo9292locId(lat, long, callback){
 
 function getNow(){
 	var date = new Date();
-	return date.getFullYear() + '-' + (date.getMonth() + 1).preZeros(2) + '-' + date.getDate().preZeros(2) + 'T' + date.getHours() + date.getMinutes();
+	return date.getFullYear() + '-' + (date.getMonth() + 1).preZeros(2) + //month start with 0 in js
+		'-' + date.getDate().preZeros(2) +
+		'T' + date.getHours().preZeros(2) + date.getMinutes().preZeros(2);
 	//return date.toJSON().substr(0,7)
 }
 
 
 /**
-* TODO description..
+* TODO: description..
 *
 * @param {string} from9292loc Current location
 * @param {string} to9292loc Destination string that is a known location to 9292 (e.g. 'station-amsterdam-centraal')
