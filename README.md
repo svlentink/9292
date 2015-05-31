@@ -14,7 +14,7 @@ based on current location.
 
 
 This is based on my 'Studenten OV'; in the morning I want to get to my University/Internship,
-and the rest of the time (defaultDestination), it routes me home.
+and the remaining time (defaultDestination), it routes me home.
 Currently, you can specify as many locations/schedules as you want, and one defaultDestination.
 
 ## What to do
