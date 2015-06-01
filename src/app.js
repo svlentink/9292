@@ -33,6 +33,7 @@ var UI = require('ui'),
 	ajax = require('ajax'),
 	userPreferences = {
 		updateScreenIntervalInSec : 60,
+		extraInterChangeTime : true,
 		defaultDestination: "utrecht/stationsplein-200", //e.g. your bicyclye location https://api.9292.nl/0.1/locations?lang=nl-NL&latlong=52.08881,5.11173
 		destinations : [{
 				label : 'work',
@@ -71,18 +72,24 @@ var statusBar = new UI.TimeText({
 function showJourneyDataOnScreen(receivedData){
 	log.debug('Entering showJourneyDataOnScreen',receivedData);
 	loading.window.hide();//hide initial logo screen
-	var output;
+	var output = '', journey;
 	if(receivedData.journeys && receivedData.journeys.length){
-		var journey = receivedData.journeys[0], //get first
-			jstep = journey.legs[0], //first part of this journey (e.g. walk to bus stop)
-			type = jstep.mode.type[0].toUpperCase(), // e.g. S=subway, W=walk
-			from = jstep.stops[0].location.name,
-			to = jstep.stops[jstep.stops.length-1].location.name, //last stop, skip all stops in between
-			timeNextStep = journey.legs[1].stops[0].arrival.substr(11);
-		output = type + ': ' + from + ' -> ' + to + ' (' + timeNextStep + ')';
+		for(var i = 0;i<receivedData.journeys.length;i++)
+			if(receivedData.journeys[i].departure >= getNow()){ // 9292 also returns journeys from the past
+				journey = receivedData.journeys[i];
+				break;
+			}
 	}
 	else
 		output = JSON.stringify(receivedData).substr(0,100);
+
+	if(journey){
+		var legs = journey.legs;
+		for(var l = 0; l<legs.length;l++)
+			output +=journeyLegToString(legs[l], i === legs.length-1);
+	}
+	else
+		output = 'No journeys found, are you outside the NL, or is it late at night?';
 
 	var window = new UI.Window(),
 		item = new UI.Text({
@@ -99,6 +106,29 @@ function showJourneyDataOnScreen(receivedData){
 	window.add(item);
 	window.show();
 }
+function journeyLegToString(leg, lastLeg){
+	var type = leg.mode.type[0].toUpperCase(), // e.g. S=subway, W=walk
+		stop = journeyStopToString(leg.stops[0]);
+
+	if(lastLeg)
+		return stop;
+	return stop + ' ' + type + ' -> ';
+}
+function journeyStopToString(stop){
+	var output = '', prefixPos = 0;
+	if(stop.departure)
+		output += '(' + stop.departure.substr(11) + ')\n';
+
+	if(stop.location.id.indexOf('/') !== -1)
+		prefixPos = stop.location.id.indexOf('/') + 1;
+	output += stop.location.id.substr(prefixPos);
+
+	if(stop.platform)
+		output += ' ' + stop.platform;
+
+	return output + '\n';
+}
+
 
 
 /**
@@ -115,7 +145,7 @@ function getDestination(){
 	for(var i = 0;i<dests.length;i++)
 		if(dests[i].days) //safety check
 			for(var c = 0; c < dests[i].days.length;c++)
-				if(dests[i].days[c] === day && //if today
+				if(dests[i].days[c] == day && //if today
 					dests[i].fromTime <= hour &&
 					dests[i].toTime >= hour)
 					return dests[i].location;
@@ -346,7 +376,7 @@ function getJourney(from9292loc,to9292loc,callback){
 			from : from9292loc,
 			dateTime : getNow(),
 			searchType : 'departure',
-			interchangeTime : 'standard',
+			interchangeTime : userPreferences.extraInterChangeTime?'extra':'standard',
 			after : 5,
 			to : to9292loc
 		},
