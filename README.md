@@ -21,9 +21,8 @@ Currently, you can specify as many locations/schedules as you want, and one defa
 Feel free to fork / create pull req.
 
 ### Current status
-The app currently only displays the first step the user needs to take (e.g. walk to bus stop).
-I did not made the effort to create a nice GUI, maybe later, but feel free to create it.
-The basics are here, you only need to make a nice layout and icons (for ferry, bus, train, walk etc.).
+The app currently works for fixed location, a gui for the settings page in the pebble app needs to be made,
+in order to insert the scheduled destinations and defaultDestination.
 
 ## Contact
 Feel free to contact me (in dutch) if you have questions and or suggestions.
