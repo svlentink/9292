@@ -25,7 +25,7 @@ GNU General Public License for more details.
 * @author svlentink
 * @date 2015/05/30
 */
-
+var debug = true;
 
 var UI = require('ui'),
 	Vector2 = require('vector2'),
@@ -34,7 +34,7 @@ var UI = require('ui'),
 	userPreferences = {
 		updateScreenIntervalInSec : 60,
 		extraInterChangeTime : true,
-		defaultDestination: "utrecht/stationsplein-200", //e.g. your bicyclye location https://api.9292.nl/0.1/locations?lang=nl-NL&latlong=52.08881,5.11173
+		defaultDestination: "station-lelystad-centrum", //e.g. your bicyclye location https://api.9292.nl/0.1/locations?lang=nl-NL&latlong=52.08881,5.11173
 		destinations : [{
 				label : 'work',
 				days : '12345', // 1 = monday
@@ -71,25 +71,14 @@ var statusBar = new UI.TimeText({
 */
 function showJourneyDataOnScreen(receivedData){
 	log.debug('Entering showJourneyDataOnScreen',receivedData);
-	loading.window.hide();//hide initial logo screen
-	var output = '', journey;
-	if(receivedData.journeys && receivedData.journeys.length){
-		for(var i = 0;i<receivedData.journeys.length;i++)
-			if(receivedData.journeys[i].departure >= getNow()){ // 9292 also returns journeys from the past
-				journey = receivedData.journeys[i];
-				break;
-			}
+
+	var output = '';
+	if(receivedData.journeys){
+		var journey = getBestJourney(receivedData.journeys);
+		output = journeyToString(journey);
 	}
 	else
 		output = JSON.stringify(receivedData).substr(0,100);
-
-	if(journey){
-		var legs = journey.legs;
-		for(var l = 0; l<legs.length;l++)
-			output +=journeyLegToString(legs[l], i === legs.length-1);
-	}
-	else
-		output = 'No journeys found, are you outside the NL, or is it late at night?';
 
 	var window = new UI.Window(),
 		item = new UI.Text({
@@ -106,29 +95,101 @@ function showJourneyDataOnScreen(receivedData){
 	window.add(item);
 	window.show();
 }
-function journeyLegToString(leg, lastLeg){
-	var type = leg.mode.type[0].toUpperCase(), // e.g. S=subway, W=walk
-		stop = journeyStopToString(leg.stops[0]);
+function getBestJourney(journeys){
+	log.debug('Entering getBestJourney', journeys);
 
-	if(lastLeg)
-		return stop;
-	return stop + ' ' + type + ' -> ';
+	if(!journeys.length)
+		return null;
+	if(Date.parse(journeys[0].departure) < Date.now()) // 9292 also returns journeys from the past
+		journeys.shift();
+	if(journeys.length === 1){
+		log.debug('Best journey found',journeys[0]);
+		return journeys.pop();
+	}
+
+	/**
+	* Sets the amount of sprinters as .sprinterCount to the object
+	* Sprinter are annoying; they have no toilets, no silent arias,
+	* and the intercom is very lound and frequent,
+	* which makes working / sleeping impossible.
+	*/
+	function setSprinterCount(journey){
+		journey.sprinterCount = 0;
+		for(var s=0;s<journey.legs.length;s++)
+			if(//typeof journey.legs[s] === 'object' &&
+				journey.legs[s].mode &&
+				journey.legs[s].mode.name === 'Sprinter' )
+				journey.sprinterCount++;
+	}
+	/**
+	* Needed to calculate the penalty
+	* When a travel takes 2 hours, a larger travel time extension is prefered
+	* for skipping on a transfer then when having a trip of 20 min.
+	*/
+	function setDuration(journey){
+		journey.durationInMin = (Date.parse(journey.arrival) - Date.parse(journey.departure) )/1000/60; //milisec, sec in min
+	}
+	/**
+	* As a traveler you want to go to your destination with ease,
+	* if you can get there 3 min faster, but with 2 extra transfers,
+	* thats inconvenient (and extra transfers mean more possible delay).
+	* This method gives a higher time, in order to make a better comparison.
+	*/
+	function getCompareTime(journey){
+		log.debug('Entering getCompareTime');
+		var dur = journey.durationInMin,
+			spr = journey.sprinterCount || 0,
+			noc = journey.numberOfChanges || 0, //given by 9292
+			ari = Date.parse(journey.arrival) /1000/60, //milisec, sec in min
+			penalty = Math.log2(dur) * (spr + noc),
+			output = ari + penalty; //arrivaltime plus the inconvenience time
+		log.debug('Leaving getCompareTime', {time:output});
+		return output;
+	}
+	//we now add extra fields for comparison
+	var l = journeys.length -1;
+	setSprinterCount(journeys[0]);
+	setDuration(journeys[0]);
+	setSprinterCount(journeys[l]);
+	setDuration(journeys[l]);
+	
+	if(getCompareTime(journeys[0]) > getCompareTime(journeys[l]) )
+		journeys.shift(); // journey[0] takes longer, remove that one
+	else
+		journeys.pop(); // journey[last] takes longer, remove it
+
+	return getBestJourney(journeys);
 }
-function journeyStopToString(stop){
-	var output = '', prefixPos = 0;
-	if(stop.departure)
-		output += '(' + stop.departure.substr(11) + ')\n';
 
-	if(stop.location.id.indexOf('/') !== -1)
-		prefixPos = stop.location.id.indexOf('/') + 1;
-	output += stop.location.id.substr(prefixPos);
+function journeyToString(journey){
+	function journeyLegToString(leg, lastLeg){
+		var type = leg.mode.type[0].toUpperCase(), // e.g. S=subway, W=walk
+			stop = journeyStopToString(leg.stops[0]);
 
-	if(stop.platform)
-		output += ' ' + stop.platform;
+		if(lastLeg)
+			return stop;
+		return stop + ' ' + type + ' -> ';
+	}
+	function journeyStopToString(stop){
+		var output = '', prefixPos = 0;
+		if(stop.departure)
+			output += '(' + stop.departure.substr(11) + ')\n';
 
-	return output + '\n';
+		if(stop.location.id.indexOf('/') !== -1)
+			prefixPos = stop.location.id.indexOf('/') + 1;
+		output += stop.location.id.substr(prefixPos);
+
+		if(stop.platform)
+			output += ' ' + stop.platform;
+
+		return output + '\n';
+	}
+
+	var legs = journey.legs, output = '';
+	for(var l = 0; l<legs.length;l++)
+		output += journeyLegToString(legs[l], l === legs.length-1);
+	return output;
 }
-
 
 
 /**
@@ -141,7 +202,7 @@ function getDestination(){
 		day = date.getDay(), //0=sunday
 		hour = date.getHours(),
 		dests = userPreferences.destinations;
-	
+
 	for(var i = 0;i<dests.length;i++)
 		if(dests[i].days) //safety check
 			for(var c = 0; c < dests[i].days.length;c++)
@@ -149,7 +210,7 @@ function getDestination(){
 					dests[i].fromTime <= hour &&
 					dests[i].toTime >= hour)
 					return dests[i].location;
-	
+
 	return userPreferences.defaultDestination;
 }
 
@@ -195,6 +256,8 @@ function genTextLog(level, desc, obj){
 	return output += ' }';
 }
 log.debug = function (desc, obj){
+	if(!debug)
+		return;
 	var lvl = 'log';
 	//chrome supports console.debug, node doesn't
 	if(typeof console[lvl] !== 'function')
