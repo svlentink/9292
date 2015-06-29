@@ -17,7 +17,7 @@ GNU General Public License for more details.
  * related and/or of this company.
  *
  * To all dev.; Please use my code (Github Fork) to improve the user experience,
- * my strenght/goal has not been to design a GUI.
+ * my strength/goal has not been to design a GUI.
  *
  * For this app, I used the documentation of the api found at:
  * https://github.com/timvanelsloo/9292-api-spec
