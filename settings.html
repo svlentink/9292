@@ -29,7 +29,7 @@
             * For more info:
             * // https://github.com/timvanelsloo/9292-api-spec/blob/master/docs/resources/journeys.md
             */
-            function getLocTo9292locId(lat, long, callback){
+            function getLocTo9292locIdDEPRICATED(lat, long, callback){ //strange error, we now do this while running the watchapp, not during settings anymore
                 console.log('Entering getLocTo9292locId',{lat:lat,long:long});
                 var version = '0.1',
                     baseUrl = 'https://api.9292.nl/';
@@ -59,7 +59,7 @@
                 var lat = map.getCenter().A,
                     lng = map.getCenter().F,
                     lbl = document.getElementById('label').value,
-                    loc = document.getElementById('9292loc').value,
+                    //loc = document.getElementById('9292loc').value,
                     from = document.getElementById('from').value,
                     to = document.getElementById('to').value,
                     days = '',
@@ -69,7 +69,7 @@
                     if(document.getElementById('d'+d).checked)
                         days += d;
 
-                destinations[indx] = {lat:lat,long:lng,label:lbl,from:from,to:to,days:days,loc:loc};
+                destinations[indx] = {lat:lat,long:lng,label:lbl,from:from,to:to,days:days};//,loc:loc};
                 reloadDropdown(indx);
             }
             function removeCurrent(){
@@ -120,7 +120,7 @@
 
                 map.setCenter({lat:dest.lat,lng:dest.long});
                 document.getElementById('label').value = dest.label;
-                document.getElementById('9292loc').value = dest.loc;
+                //document.getElementById('9292loc').value = dest.loc;
                 document.getElementById('from').value = dest.from;
                 document.getElementById('to').value = dest.to;
                 for(var d = 0; d<7;d++)
@@ -135,7 +135,7 @@
                     long: 4.9005,
                     from: 6,
                     to: 12,
-                    loc: 'station-amsterdam-centraal',
+                    //loc: 'station-amsterdam-centraal',
                     label: 'new',
                     days: '135'
                 });
@@ -155,6 +155,8 @@
             function mapChanged(){
                 var lat = map.getCenter().A,
                     lng = map.getCenter().F;
+                saveCurrent();
+                return;
                 getLocTo9292locId(lat, lng,function(loc){
                     console.log('setting loc value to input under map',loc);
                     document.getElementById('9292loc').value = loc;
@@ -202,7 +204,7 @@
             <button id='addDestination' onclick='newDestination()'>+</button>
             <button id='removeDestination' style='display:none;' onclick='removeCurrent()'>-</button>
             <div id="map_canvas"style="width:400px;height:400px;"onload="addMapListener"></div>
-            <input disabled id='9292loc' value='station-amsterdam-centraal' style='width:400px;'/>
+<!--            <input disabled id='9292loc' value='station-amsterdam-centraal' style='width:400px;'/>    -->
             <br/>
             Label
             <input id='label' value='home'/>
