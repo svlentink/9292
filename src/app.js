@@ -191,12 +191,13 @@ function showLoadingScreen() {
  * This screen will be shown when the user has not jet entered their destinations
  * in the settingspage, which is opened in the pebble app.
  */
+var setup = {};
 function showSetupScreen() {
     log.debug('Entering showSetupScreen');
     // Show splash screen while waiting for data
-    var setup = {};
+    
     setup.window = new UI.Window();
-    setup.font = 'ROBOTO_BOLD_SUBSET_49';
+    setup.font = 'GOTHIC_14_BOLD';
     setup.textOverflow = 'wrap';
     setup.textAlign = 'left';
     setup.size = new Vector2(144, 168);
@@ -381,7 +382,7 @@ function getDestination(callback) {
     function returnLocation(dest) {
         log.debug('Entering returnLocation',dest);
         if (!dest.location)
-            geoLocTo9292loc(dest.lat, dest.lng, function(result) {
+            geoLocTo9292loc(dest.lat, dest.long, function(result) {
                 dest.location = result;
                 if (callback)
                     callback(result);
@@ -565,7 +566,7 @@ Pebble.addEventListener('showConfiguration', function(e) {
 Pebble.addEventListener('webviewclosed',
     function(e) {
         var configuration = decodeURIComponent(e.response);
-        log.debug('Configuration window returned: ', configuration);
+		log.debug('Configuration window returned: ', {data:configuration});
         localStorage.destinations = configuration;
     }
 );
@@ -593,16 +594,18 @@ Pebble.addEventListener('webviewclosed',
 function step000() {
     log.debug('Entering step000');
     showLoadingScreen();
-    if ( !(localStorage.destinations &&
+    if ( !(typeof localStorage.destinations === 'string' &&
+		   localStorage.destinations !== 'CANCELLED' &&
         JSON.parse(localStorage.destinations) &&
         JSON.parse(localStorage.destinations).length) )
         showSetupScreen();
     else {
-        updateLocation(); //triggers the update screen
+        step010(); //triggers the update screen
         setInterval(
             step010,
             userPreferences.updateScreenIntervalInSec * 1000
         ); //http://stackoverflow.com/questions/26433309/pebble-js-update-view-frequently
+		log.debug('interval set inside step000');
     }
 }
 /**
