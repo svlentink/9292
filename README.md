@@ -21,8 +21,7 @@ Currently, you can specify as many locations/schedules as you want, and one defa
 Feel free to fork / create pull req.
 
 ### Current status
-The app currently works for fixed location, a gui for the settings page in the pebble app needs to be made,
-in order to insert the scheduled destinations and defaultDestination.
+Working and in pebble store. GUI is ugly but functional.
 
 ## Contact
 Feel free to contact me (in dutch) if you have questions and or suggestions.
