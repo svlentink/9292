@@ -1,5 +1,8 @@
 # 9292 Pebble app
-This repository holds the fundamental basics for a 9292 watch app for the Pebble.
+This repository holds the fundamental basics for a 9292 watch app for the Pebble. The app is currently in the pebble app store.
+
+##Status: no location on various devices
+The pebble android app on my OnePlus is not working. Even Swarm has no location access. I cannot update it when Pebble isn't updating their android app.
 
 ## What is does
 It looks at the location of the user and the hour and day of the week to determine where to go.
@@ -19,6 +22,7 @@ Currently, you can specify as many locations/schedules as you want, and one defa
 
 ## What to do
 Feel free to fork / create pull req.
+Notify user when location is not available.
 
 ### Current status
 Working and in pebble store. GUI is ugly but functional.
