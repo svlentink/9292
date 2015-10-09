@@ -23,6 +23,7 @@ Currently, you can specify as many locations/schedules as you want, and one defa
 ## What to do
 Feel free to fork / create pull req.
 Notify user when location is not available.
+New insight! The HTML page just is not returning any lat and long, maybe it api of google has changed, will be fixed soon!
 
 ### Current status
 Working and in pebble store. GUI is ugly but functional.
