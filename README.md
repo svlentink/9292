@@ -4,6 +4,19 @@ This repository holds the fundamental basics for a 9292 watch app for the Pebble
 ##Status: no location on various devices
 The pebble android app on my OnePlus is not working. Even Swarm has no location access. I cannot update it when Pebble isn't updating their android app.
 
+
+(update 2016) Not sure what current status is, some apps work now, but for example Swarm still gets no location access.
+
+### Pebble timeline UI/OS
+This whole app doesn't make sense anymore.
+In the past, you had multiple watchfaces loaded on your watch.
+This isn't the case anymore.
+The app can stay a watchface, if and only if,
+time is added in the top bar (1h work). (look at loading screen, it has already been build)
+For now, I do not think I will ever fix this code.
+It has worked, but dependancies changed, I'm sorry.
+Good luck with it ;)
+
 ## What is does
 It looks at the location of the user and the hour and day of the week to determine where to go.
 (e.g. when in the morning on a workday, it knows you want to go to work)
